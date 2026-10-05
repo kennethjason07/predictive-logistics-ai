@@ -1,0 +1,94 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.locations (
+  location_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  type character varying NOT NULL,
+  latitude numeric,
+  longitude numeric,
+  terrain character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT locations_pkey PRIMARY KEY (location_id)
+);
+CREATE TABLE public.inventory (
+  inventory_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  location_id uuid NOT NULL,
+  supply_type character varying NOT NULL,
+  quantity numeric NOT NULL DEFAULT 0 CHECK (quantity >= 0::numeric),
+  unit character varying NOT NULL,
+  safety_stock numeric NOT NULL DEFAULT 0 CHECK (safety_stock >= 0::numeric),
+  last_updated timestamp with time zone DEFAULT now(),
+  CONSTRAINT inventory_pkey PRIMARY KEY (inventory_id),
+  CONSTRAINT fk_inventory_location FOREIGN KEY (location_id) REFERENCES public.locations(location_id)
+);
+CREATE TABLE public.consumption (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  location_id uuid NOT NULL,
+  supply_type character varying NOT NULL,
+  consumption_date date NOT NULL,
+  quantity_consumed numeric NOT NULL CHECK (quantity_consumed >= 0::numeric),
+  unit character varying NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT consumption_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_consumption_location FOREIGN KEY (location_id) REFERENCES public.locations(location_id)
+);
+CREATE TABLE public.routes (
+  route_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  source_id uuid NOT NULL,
+  destination_id uuid NOT NULL,
+  distance_km numeric NOT NULL CHECK (distance_km > 0::numeric),
+  travel_time_hr numeric NOT NULL CHECK (travel_time_hr > 0::numeric),
+  terrain character varying,
+  road_condition character varying DEFAULT 'GOOD'::character varying,
+  weather_status character varying DEFAULT 'Clear'::character varying,
+  status character varying DEFAULT 'Open'::character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT routes_pkey PRIMARY KEY (route_id),
+  CONSTRAINT fk_route_source FOREIGN KEY (source_id) REFERENCES public.locations(location_id),
+  CONSTRAINT fk_route_destination FOREIGN KEY (destination_id) REFERENCES public.locations(location_id)
+);
+CREATE TABLE public.vehicles (
+  vehicle_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  vehicle_type character varying NOT NULL,
+  capacity numeric NOT NULL CHECK (capacity > 0::numeric),
+  capacity_unit character varying NOT NULL,
+  availability_status character varying NOT NULL DEFAULT 'AVAILABLE'::character varying,
+  current_location_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT vehicles_pkey PRIMARY KEY (vehicle_id),
+  CONSTRAINT fk_vehicle_location FOREIGN KEY (current_location_id) REFERENCES public.locations(location_id)
+);
+CREATE TABLE public.logistics (
+  logistics_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  source_id uuid NOT NULL,
+  destination_id uuid NOT NULL,
+  supply_type character varying NOT NULL,
+  quantity numeric NOT NULL CHECK (quantity > 0::numeric),
+  unit character varying NOT NULL,
+  route_id uuid,
+  status character varying NOT NULL DEFAULT 'Recommended'::character varying,
+  dispatch_time timestamp with time zone,
+  expected_arrival timestamp with time zone,
+  actual_arrival timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT logistics_pkey PRIMARY KEY (logistics_id),
+  CONSTRAINT fk_logistics_source FOREIGN KEY (source_id) REFERENCES public.locations(location_id),
+  CONSTRAINT fk_logistics_destination FOREIGN KEY (destination_id) REFERENCES public.locations(location_id),
+  CONSTRAINT fk_logistics_route FOREIGN KEY (route_id) REFERENCES public.routes(route_id)
+);
+CREATE TABLE public.demand_forecasts (
+  forecast_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  location_id uuid NOT NULL,
+  supply_type character varying NOT NULL,
+  forecast_date date NOT NULL,
+  predicted_quantity numeric NOT NULL CHECK (predicted_quantity >= 0::numeric),
+  lower_bound numeric,
+  upper_bound numeric,
+  confidence numeric,
+  model_version character varying NOT NULL DEFAULT 'baseline-v1'::character varying,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT demand_forecasts_pkey PRIMARY KEY (forecast_id),
+  CONSTRAINT fk_forecast_location FOREIGN KEY (location_id) REFERENCES public.locations(location_id)
+);

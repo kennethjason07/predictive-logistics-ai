@@ -1,0 +1,32 @@
+{
+  "name": "indian-army-logistics",
+  "version": "0.1.0",
+  "description": "AI-powered predictive logistics and forward supply chain management system",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test:supabase": "node scripts/test-supabase.mjs",
+    "test:inventory": "node scripts/test-inventory-engine.mjs",
+    "test:gis": "node scripts/test-gis-route-engine.mjs",
+    "seed:inventory": "node scripts/seed-inventory-demo-data.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.0",
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  }
+}
